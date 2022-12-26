@@ -23,6 +23,7 @@ from PyQt5.QtWidgets import (QFormLayout, QListWidget, QAbstractItemView, QLineE
 import os
 import krita
 import importlib
+import json
 
 
 class UIDocumentTools(object):
@@ -135,24 +136,38 @@ class UIDocumentTools(object):
         self.loadDocuments()
 
     def confirmButton(self):
-        self.outputField.setText(i18n("Exporting ..."))
-        selectedDocuments = self._selectedDocuments()
+        self.outputField.setText(i18n("Exporting..."))
+        
+        doc = self._selectedDocuments()[0]
 
-        if selectedDocuments:
-            # TODO have this loop through the tabs and apply all of the items
+        if doc:
             widget = self.tabTools.currentWidget()
-            for document in selectedDocuments:
-                cloneDoc = document.clone()
-                widget.adjust(cloneDoc)
-                # Save the json from the clone
-                self.spineExport.exportDocument(cloneDoc, self.directoryTextField.text(), self.boneLengthField.value(), self.includeHiddenCheckbox.isChecked())
-                # Clone no longer needed
-                cloneDoc.close()
+            cloneDoc = doc.clone()
+            widget.adjust(cloneDoc)
+            # Save the json from the clone
+            self.spineExport.exportDocument(cloneDoc, self.directoryTextField.text(), self.boneLengthField.value(), self.includeHiddenCheckbox.isChecked())
+            # Clone no longer needed
+            cloneDoc.close()
+            
+            self.outputField.setText(i18n("Saving settings..."))
+            
+            jsonVal = {
+                "outDir": self.directoryTextField.text(),
+                "includeHidden": self.includeHiddenCheckbox.isChecked()
+            }
+            
+            setPath = self._getSettingsPath(doc.fileName())
+            
+            with open(setPath, "w") as outFile:
+                json.dump(jsonVal, outFile, indent=2)
+            #os.system("attrib +h \"{0}\"".format(setPath))
 
             self.outputField.setText(i18n("The selected document has been exported."))
-
         else:
             self.outputField.setText(i18n("Please select a document."))
+
+    def _getSettingsPath(self, fileName):
+        return "{0}.spinesettings.json".format(fileName)
 
     def _selectDir(self):
         doc = self._selectedDocuments()
@@ -166,13 +181,22 @@ class UIDocumentTools(object):
 
     def _documentSelected(self):
         doc = self._selectedDocuments()
-        self.directoryTextField.setText(os.path.dirname(doc[0].fileName()))
+        fileName = doc[0].fileName()
+        
+        setPath = self._getSettingsPath(fileName)
+        
+        if (os.path.exists(setPath)):
+            with open(setPath, "r") as inFile:
+                docData = json.load(inFile)
+                self.directoryTextField.setText(docData["outDir"])
+                self.includeHiddenCheckbox.setChecked(docData["includeHidden"])
+        else: 
+            self.directoryTextField.setText(os.path.dirname(fileName))
         # TODO have this loop through the tabs and set them up
         widget = self.tabTools.currentWidget()
         # Tell the widget to update itself to the current settings
         widget.updateFields(doc[0])
         self.outputField.clear()
-
 
     def _selectedDocuments(self):
         selectedPaths = [
