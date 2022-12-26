@@ -12,12 +12,13 @@
 
 # https://creativecommons.org/publicdomain/zero/1.0/legalcode
 
+import krita
 from . import documenttoolsdialog
 from . import SpineExport
 
 from PyQt5.QtCore import Qt, pyqtSignal, QObject
-from PyQt5.QtWidgets import (QFormLayout, QListWidget, QAbstractItemView, QLineEdit, QFileDialog,
-                             QDialogButtonBox, QVBoxLayout, QFrame, QTabWidget,
+from PyQt5.QtWidgets import (QFormLayout, QListWidget, QAbstractItemView, QLineEdit, QFileDialog, QLabel,
+                             QDialogButtonBox, QVBoxLayout, QFrame, QTabWidget, QSpinBox,
                              QPushButton, QAbstractScrollArea, QMessageBox, QHBoxLayout)
 import os
 import krita
@@ -37,10 +38,15 @@ class UIDocumentTools(object):
         self.tabTools = QTabWidget()
         self.buttonBox = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.outputField = QLabel()
+
         # Output directory
         self.directorySelectorLayout = QHBoxLayout()
         self.directoryTextField = QLineEdit()
         self.directoryDialogButton = QPushButton(i18n("..."))
+        # Bone length
+        self.boneLengthField = QSpinBox()
+        self.boneLengthField.setRange(0, 100)
 
         self.kritaInstance = krita.Krita.instance()
         self.documentsList = []
@@ -61,11 +67,12 @@ class UIDocumentTools(object):
 
         self.documentLayout.addWidget(self.widgetDocuments)
         self.documentLayout.addWidget(self.refreshButton)
-        self.directorySelectorLayout.addWidget( self.directoryTextField)
+        self.directorySelectorLayout.addWidget(self.directoryTextField)
         self.directorySelectorLayout.addWidget(self.directoryDialogButton)
 
         self.formLayout.addRow(i18n("Documents:"), self.documentLayout)
         self.formLayout.addRow(i18n("Output Directory:"), self.directorySelectorLayout)
+        self.formLayout.addRow(i18n("Bone Length:"), self.boneLengthField )
         self.formLayout.addRow(self.tabTools)
 
         self.line = QFrame()
@@ -74,13 +81,17 @@ class UIDocumentTools(object):
 
         self.mainLayout.addLayout(self.formLayout)
         self.mainLayout.addWidget(self.line)
+        self.mainLayout.addWidget(self.outputField)
         self.mainLayout.addWidget(self.buttonBox)
 
         self.mainDialog.resize(500, 300)
-        self.mainDialog.setWindowTitle(i18n("Document Tools"))
+        self.mainDialog.setWindowTitle(i18n("Export to Spine"))
         self.mainDialog.setSizeGripEnabled(True)
         self.mainDialog.show()
         self.mainDialog.activateWindow()
+
+        userDefaults = os.path.expanduser("~/.kritatospine")
+
 
     def loadTools(self):
         modulePath = 'KritaToSpine.tools'
@@ -111,12 +122,12 @@ class UIDocumentTools(object):
             self.widgetDocuments.addItem(document.fileName())
 
     def refreshButtonClicked(self):
+        self.outputField.clear()
         self.loadDocuments()
 
     def confirmButton(self):
+        self.outputField.setText(i18n("Exporting ..."))
         selectedDocuments = self._selectedDocuments()
-
-        self.msgBox = QMessageBox(self.mainDialog)
 
         if selectedDocuments:
             # TODO have this loop through the tabs and apply all of the items
@@ -125,14 +136,14 @@ class UIDocumentTools(object):
                 cloneDoc = document.clone()
                 widget.adjust(cloneDoc)
                 # Save the json from the clone
-                self.spineExport.exportDocument(cloneDoc, self.directoryTextField.text())
+                self.spineExport.exportDocument(cloneDoc, self.directoryTextField.text(), self.boneLengthField.value())
                 # Clone no longer needed
                 cloneDoc.close()
 
-            self.msgBox.setText(i18n("The selected document has been exported."))
+            self.outputField.setText(i18n("The selected document has been exported."))
+
         else:
-            self.msgBox.setText(i18n("Select at least one document."))
-        self.msgBox.exec_()
+            self.outputField.setText(i18n("Please select at least one document."))
 
     def _selectDir(self):
         doc = self._selectedDocuments()
@@ -151,6 +162,7 @@ class UIDocumentTools(object):
         widget = self.tabTools.currentWidget()
         # Tell the widget to update itself to the current settings
         widget.updateFields(doc[0])
+        self.outputField.clear()
 
 
     def _selectedDocuments(self):

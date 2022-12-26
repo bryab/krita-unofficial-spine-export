@@ -1,6 +1,7 @@
 
 import os
 import re
+import krita
 
 from krita import (Krita, Extension)
 
@@ -20,12 +21,13 @@ class SpineExport(object):
     def __init__(self, parent=None):
         self.msgBox = None
         self.fileFormat = 'png'
+
         self.bonePattern = re.compile("\(bone\)|\[bone\]", re.IGNORECASE)
         self.mergePattern = re.compile("\(merge\)|\[merge\]", re.IGNORECASE)
         self.slotPattern = re.compile("\(slot\)|\[slot\]", re.IGNORECASE)
         self.skinPattern = re.compile("\(skin\)|\[skin\]", re.IGNORECASE)
 
-    def exportDocument(self, document, directory):
+    def exportDocument(self, document, directory, boneLength):
         if document is not None:
             self.json = {
                 "skeleton": {"images": directory},
@@ -37,10 +39,24 @@ class SpineExport(object):
             self.spineBones = self.json['bones']
             self.spineSlots = self.json['slots']
             self.spineSkins = self.json['skins']['default']
+            self.boneLength = boneLength
+            self.skinsCount = 1 # default, incremented with new skins
+            self.boneRotation = 0
+
+            
+            horGuides = document.horizontalGuides()
+            verGuides = document.verticalGuides()
+           
+            xOrigin = 0
+            yOrigin = 0
+            
+            if len(horGuides) == 1 and len(verGuides) == 1:
+                xOrigin = verGuides[0]
+                yOrigin = -horGuides[0]
 
             Krita.instance().setBatchmode(True)
             self.document = document
-            self._export(document.rootNode(), directory)
+            self._export(document.rootNode(), directory, "root", xOrigin, yOrigin)#, "root", xOrigin, yOrigin)
             Krita.instance().setBatchmode(False)
             with open('{0}/{1}'.format(directory, 'spine.json'), 'w') as outfile:
                 json.dump(self.json, outfile, indent=2)
@@ -83,6 +99,8 @@ class SpineExport(object):
                         self.spineBones.append({
                             'name': newBone,
                             'parent': bone,
+                            'length': self.boneLength,
+                            'rotation': self.boneRotation,
                             'x': newX,
                             'y': newY
                         })
@@ -102,15 +120,19 @@ class SpineExport(object):
                     ## Found a skin
                     if self.skinPattern.search(child.name()):
                         new_skin_name = self.skinPattern.sub('', child.name()).strip()
-                        new_skin = "" #  "#'\t{ "name": ' + self.quote(new_skin_name) + ', "bone": '# + self.quote(slot.bone ? slot.bone.name : "root");
-                        self.spineDefaultSkins.append(new_skin)
+                        #problem
+                        #new_skin = "#'\t{ "name": ' + self.quote(new_skin_name) + ', "bone": '# + self.quote(slot.bone ? slot.bone.name : "root");
+                        new_skin = "FIXSKIN"
+                        self.spineSkins.append(new_skin)
+                        self.skinsCount = self.skinsCount + 1
 
                     self._export(child, directory, newBone, newX, newY, newSlot)
                     continue
 
             name = self.mergePattern.sub('', child.name()).strip()
             layer_file_name = '{0}/{1}.{2}'.format(directory, name, self.fileFormat)
-            child.save(layer_file_name, 96, 96)
+            ## Note there is an optional bounds setting here
+            child.save(layer_file_name, 96, 96, krita.InfoObject()) 
 
             newSlot = slot
 
@@ -132,7 +154,10 @@ class SpineExport(object):
             self.spineSkins[slotName][name] = {
                 'x': rect.left() + rect.width() / 2 - xOffset,
                 'y': (- rect.bottom() + rect.height() / 2) - yOffset,
-                'rotation': 0,
+                'rotation': -self.boneRotation,
                 'width': rect.width(),
                 'height': rect.height(),
             }
+
+
+

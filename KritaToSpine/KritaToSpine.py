@@ -4,7 +4,7 @@
 # uidocumentools.py contains the main window and logic, including tabs for applying effects on export
 # SpineExport.py contains the code and support for doing the exporting
 
-
+import krita
 from krita import (Krita, Extension)
 
 from . import uidocumenttools
