@@ -27,7 +27,7 @@ class SpineExport(object):
         self.slotPattern = re.compile("\(slot\)|\[slot\]", re.IGNORECASE)
         self.skinPattern = re.compile("\(skin\)|\[skin\]", re.IGNORECASE)
 
-    def exportDocument(self, document, directory, boneLength):
+    def exportDocument(self, document, directory, boneLength, includeHidden):
         if document is not None:
             self.json = {
                 "skeleton": {"images": directory},
@@ -42,8 +42,8 @@ class SpineExport(object):
             self.boneLength = boneLength
             self.skinsCount = 1 # default, incremented with new skins
             self.boneRotation = 0
+            self.includeHidden = includeHidden
 
-            
             horGuides = document.horizontalGuides()
             verGuides = document.verticalGuides()
            
@@ -56,7 +56,7 @@ class SpineExport(object):
 
             Krita.instance().setBatchmode(True)
             self.document = document
-            self._export(document.rootNode(), directory, "root", xOrigin, yOrigin)#, "root", xOrigin, yOrigin)
+            self._export(document.rootNode(), directory, "root", xOrigin, yOrigin)
             Krita.instance().setBatchmode(False)
             with open('{0}/{1}'.format(directory, 'spine.json'), 'w') as outfile:
                 json.dump(self.json, outfile, indent=2)
@@ -77,7 +77,7 @@ class SpineExport(object):
             if "selectionmask" in child.type():
                 continue
 
-            if not child.visible():
+            if not self.includeHidden and not child.visible():
                 continue
 
             if '[ignore]' in child.name():
