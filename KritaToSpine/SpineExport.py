@@ -43,18 +43,20 @@ class SpineExport(object):
             self.skinsCount = 1 # default, incremented with new skins
             self.boneRotation = 0
 
-            if document.guidesVisible():
-                xOrigin = document.horizontalGuides()[0]
-                yOrigin = document.verticalGuides()[0]
-                self._alert("x origin: " + str(xOrigin))
-                self._alert("y origin: " + str(yOrigin))
-            else:
-                xOrigin = 0
-                yOrigin = 0
+            
+            horGuides = document.horizontalGuides()
+            verGuides = document.verticalGuides()
+           
+            xOrigin = 0
+            yOrigin = 0
+            
+            if len(horGuides) == 1 and len(verGuides) == 1:
+                xOrigin = verGuides[0]
+                yOrigin = -horGuides[0]
 
             Krita.instance().setBatchmode(True)
             self.document = document
-            self._export(document.rootNode(), directory)#, "root", xOrigin, yOrigin)
+            self._export(document.rootNode(), directory, "root", xOrigin, yOrigin)#, "root", xOrigin, yOrigin)
             Krita.instance().setBatchmode(False)
             with open('{0}/{1}'.format(directory, 'spine.json'), 'w') as outfile:
                 json.dump(self.json, outfile, indent=2)
