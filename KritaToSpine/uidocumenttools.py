@@ -44,6 +44,7 @@ class UIDocumentTools(object):
         self.directorySelectorLayout = QHBoxLayout()
         self.directoryTextField = QLineEdit()
         self.directoryDialogButton = QPushButton(i18n("..."))
+        
         # Bone length
         self.boneLengthField = QSpinBox()
         self.boneLengthField.setRange(0, 100)
@@ -64,7 +65,6 @@ class UIDocumentTools(object):
         self.widgetDocuments.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
 
     def initialize(self):
-        self.loadDocuments()
         self.loadTools()
 
         self.documentLayout.addWidget(self.widgetDocuments)
@@ -94,6 +94,8 @@ class UIDocumentTools(object):
         self.mainDialog.activateWindow()
 
         userDefaults = os.path.expanduser("~/.kritatospine")
+        
+        self.loadDocuments()
 
 
     def loadTools(self):
@@ -123,6 +125,10 @@ class UIDocumentTools(object):
 
         for document in self.documentsList:
             self.widgetDocuments.addItem(document.fileName())
+           
+        if self.documentsList[0]:
+            self.widgetDocuments.setCurrentItem(self.widgetDocuments.item(0))
+            self._documentSelected()
 
     def refreshButtonClicked(self):
         self.outputField.clear()
@@ -146,7 +152,7 @@ class UIDocumentTools(object):
             self.outputField.setText(i18n("The selected document has been exported."))
 
         else:
-            self.outputField.setText(i18n("Please select at least one document."))
+            self.outputField.setText(i18n("Please select a document."))
 
     def _selectDir(self):
         doc = self._selectedDocuments()
