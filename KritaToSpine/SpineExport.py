@@ -47,12 +47,14 @@ class SpineExport(object):
             horGuides = document.horizontalGuides()
             verGuides = document.verticalGuides()
            
+            #self._alert("Guides: ({0}, {1})".format(horGuides, verGuides))
+           
             xOrigin = 0
             yOrigin = 0
-            
+                        
             if len(horGuides) == 1 and len(verGuides) == 1:
                 xOrigin = verGuides[0]
-                yOrigin = -horGuides[0]
+                yOrigin = -horGuides[0] + 1
 
             Krita.instance().setBatchmode(True)
             self.document = document
@@ -82,6 +84,10 @@ class SpineExport(object):
 
             if '[ignore]' in child.name():
                 continue
+                
+            # Special "fake" Krita layer - maybe used for showing guides?
+            if child.name() == "decorations-wrapper-layer":
+                continue;
 
             if child.childNodes():
                 if not self.mergePattern.search(child.name()):

@@ -142,7 +142,14 @@ class UIDocumentTools(object):
 
         if doc:
             widget = self.tabTools.currentWidget()
+            
+            #Krita seems to have a bug where invisible guides in a cloned document get scaled incorrectly
+            #Bug: https://bugs.kde.org/show_bug.cgi?id=463713
+            oldGuideVis = doc.guidesVisible()
+            doc.setGuidesVisible(True)
             cloneDoc = doc.clone()
+            doc.setGuidesVisible(oldGuideVis)
+            
             widget.adjust(cloneDoc)
             # Save the json from the clone
             self.spineExport.exportDocument(cloneDoc, self.directoryTextField.text(), self.boneLengthField.value(), self.includeHiddenCheckbox.isChecked())
