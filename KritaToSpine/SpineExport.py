@@ -40,8 +40,6 @@ class SpineExport(object):
             self.spineSlots = self.json['slots']
             self.spineSkins = self.json['skins']['default']
             self.boneLength = boneLength
-            self.skinsCount = 1 # default, incremented with new skins
-            self.boneRotation = 0
             self.includeHidden = includeHidden
 
             horGuides = document.horizontalGuides()
@@ -106,7 +104,6 @@ class SpineExport(object):
                             'name': newBone,
                             'parent': bone,
                             'length': self.boneLength,
-                            'rotation': self.boneRotation,
                             'x': newX,
                             'y': newY
                         })
@@ -130,7 +127,6 @@ class SpineExport(object):
                         #new_skin = "#'\t{ "name": ' + self.quote(new_skin_name) + ', "bone": '# + self.quote(slot.bone ? slot.bone.name : "root");
                         new_skin = "FIXSKIN"
                         self.spineSkins.append(new_skin)
-                        self.skinsCount = self.skinsCount + 1
 
                     self._export(child, directory, newBone, newX, newY, newSlot)
                     continue
@@ -160,7 +156,6 @@ class SpineExport(object):
             self.spineSkins[slotName][name] = {
                 'x': rect.left() + rect.width() / 2 - xOffset,
                 'y': (- rect.bottom() + rect.height() / 2) - yOffset,
-                'rotation': -self.boneRotation,
                 'width': rect.width(),
                 'height': rect.height(),
             }
