@@ -1,20 +1,11 @@
-
 import os
 import re
 import krita
-
-from krita import (Krita, Extension)
-
-import os
 import json
-import re
-
+import pathlib
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QFormLayout, QListWidget, QAbstractItemView,
-                             QDialogButtonBox, QVBoxLayout, QFrame, QTabWidget, QFileDialog,
-                             QPushButton, QAbstractScrollArea, QMessageBox)
-
+from PyQt5.QtWidgets import (QMessageBox)
 
 class SpineExport(object):
 
@@ -38,7 +29,7 @@ class SpineExport(object):
             }
             self.spineBones = self.json['bones']
             self.spineSlots = self.json['slots']
-            self.spineSkins = self.json['skins']['default']
+            self.spineSkins = self.json['skins']
             self.boneLength = boneLength
             self.includeHidden = includeHidden
 
@@ -54,10 +45,10 @@ class SpineExport(object):
                 xOrigin = verGuides[0]
                 yOrigin = -horGuides[0] + 1
 
-            Krita.instance().setBatchmode(True)
+            krita.Krita.instance().setBatchmode(True)
             self.document = document
             self._export(document.rootNode(), directory, "root", xOrigin, yOrigin)
-            Krita.instance().setBatchmode(False)
+            krita.Krita.instance().setBatchmode(False)
             with open('{0}/{1}'.format(directory, 'spine.json'), 'w') as outfile:
                 json.dump(self.json, outfile, indent=2)
         else:
@@ -66,13 +57,23 @@ class SpineExport(object):
     @staticmethod
     def quote(value):
         return '"' + value + '"'
+        
+    @staticmethod
+    # Returns None if the name doesn't contain the tag. Empty string if the tag is present but has no value, otherwise returns the tag's value
+    def getTagValue(name, tag):
+        regex = "\[{0}:?([^\]]+)?\]".format(tag)
+        matches = re.findall(regex, name, flags=re.IGNORECASE)
+        if len(matches) > 0:
+            return matches[0].strip()
+        else:
+            return None
 
     def _alert(self, message):
         self.msgBox = self.msgBox if self.msgBox else QMessageBox()
         self.msgBox.setText(message)
         self.msgBox.exec_()
 
-    def _export(self, node, directory, bone="root", xOffset=0, yOffset=0, slot=None):
+    def _export(self, node, directory, bone="root", xOffset=0, yOffset=0, slot=None, currentSkinName="default"):
         for child in node.childNodes():
             if "selectionmask" in child.type():
                 continue
@@ -86,6 +87,11 @@ class SpineExport(object):
             # Special "fake" Krita layer - maybe used for showing guides?
             if child.name() == "decorations-wrapper-layer":
                 continue;
+                
+            # Save a copy so other children don't affect us
+            skinName = currentSkinName
+            
+            childDir = directory
 
             if child.childNodes():
                 if not self.mergePattern.search(child.name()):
@@ -120,21 +126,23 @@ class SpineExport(object):
                         }
                         self.spineSlots.append(newSlot)
 
-                    ## Found a skin
-                    if self.skinPattern.search(child.name()):
-                        new_skin_name = self.skinPattern.sub('', child.name()).strip()
-                        #problem
-                        #new_skin = "#'\t{ "name": ' + self.quote(new_skin_name) + ', "bone": '# + self.quote(slot.bone ? slot.bone.name : "root");
-                        new_skin = "FIXSKIN"
-                        self.spineSkins.append(new_skin)
+                    # Found a skin
+                    newSkinName = self.getTagValue(child.name(), "skin")
 
-                    self._export(child, directory, newBone, newX, newY, newSlot)
+                    if newSkinName is not None:
+                        skinName = newSkinName
+                        childDir = childDir + "/" + skinName
+                        pathlib.Path(childDir).mkdir(parents=True, exist_ok=True)
+                    
+                    self._export(child, directory, newBone, newX, newY, newSlot, skinName)
                     continue
 
             name = self.mergePattern.sub('', child.name()).strip()
-            layer_file_name = '{0}/{1}.{2}'.format(directory, name, self.fileFormat)
+            fileName = name if skinName == "default" else "{0}/{1}".format(skinName, name)
+            outPath = '{0}/{1}.{2}'.format(directory, fileName, self.fileFormat)
+            print("outpath: " + outPath)
             ## Note there is an optional bounds setting here
-            child.save(layer_file_name, 96, 96, krita.InfoObject()) 
+            child.save(outPath, 96, 96, krita.InfoObject()) 
 
             newSlot = slot
 
@@ -151,14 +159,26 @@ class SpineExport(object):
 
             rect = child.bounds()
             slotName = newSlot['name']
-            if slotName not in self.spineSkins:
-                self.spineSkins[slotName] = {}
-            self.spineSkins[slotName][name] = {
+            
+            if skinName not in self.spineSkins:
+                self.spineSkins[skinName] = {}
+                
+            skinDict = self.spineSkins[skinName]
+            
+            if slotName not in skinDict:
+                skinDict[slotName] = {}
+            
+            slotDict = skinDict[slotName]
+            
+            slotDict[name] = {
                 'x': rect.left() + rect.width() / 2 - xOffset,
                 'y': (- rect.bottom() + rect.height() / 2) - yOffset,
                 'width': rect.width(),
                 'height': rect.height(),
             }
+            
+            if name != fileName:
+                slotDict[name]["name"] = fileName
 
 
 
