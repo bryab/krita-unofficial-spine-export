@@ -93,49 +93,48 @@ class SpineExport(object):
             
             childDir = directory
 
-            if child.childNodes():
-                if not self.mergePattern.search(child.name()):
-                    newBone = bone
-                    newSlot = slot
-                    newX = xOffset
-                    newY = yOffset
+            if child.childNodes() and not self.mergePattern.search(child.name()):
+                newBone = bone
+                newSlot = slot
+                newX = xOffset
+                newY = yOffset
 
-                    # Found a bone
-                    if self.bonePattern.search(child.name()):
-                        newBone = self.bonePattern.sub('', child.name()).strip()
-                        rect = child.bounds()
-                        newX = rect.left() + rect.width() / 2 - xOffset
-                        newY = (- rect.bottom() + rect.height() / 2) - yOffset
-                        self.spineBones.append({
-                            'name': newBone,
-                            'parent': bone,
-                            'length': self.boneLength,
-                            'x': newX,
-                            'y': newY
-                        })
-                        newX = xOffset + newX
-                        newY = yOffset + newY
+                # Found a bone
+                if self.bonePattern.search(child.name()):
+                    newBone = self.bonePattern.sub('', child.name()).strip()
+                    rect = child.bounds()
+                    newX = rect.left() + rect.width() / 2 - xOffset
+                    newY = (- rect.bottom() + rect.height() / 2) - yOffset
+                    self.spineBones.append({
+                        'name': newBone,
+                        'parent': bone,
+                        'length': self.boneLength,
+                        'x': newX,
+                        'y': newY
+                    })
+                    newX = xOffset + newX
+                    newY = yOffset + newY
 
-                    # Found a slot
-                    if self.slotPattern.search(child.name()):
-                        newSlotName = self.slotPattern.sub('', child.name()).strip()
-                        newSlot = {
-                            'name': newSlotName,
-                            'bone': bone,
-                            'attachment': None,
-                        }
-                        self.spineSlots.append(newSlot)
+                # Found a slot
+                if self.slotPattern.search(child.name()):
+                    newSlotName = self.slotPattern.sub('', child.name()).strip()
+                    newSlot = {
+                        'name': newSlotName,
+                        'bone': bone,
+                        'attachment': None,
+                    }
+                    self.spineSlots.append(newSlot)
 
-                    # Found a skin
-                    newSkinName = self.getTagValue(child.name(), "skin")
+                # Found a skin
+                newSkinName = self.getTagValue(child.name(), "skin")
 
-                    if newSkinName is not None:
-                        skinName = newSkinName
-                        childDir = childDir + "/" + skinName
-                        pathlib.Path(childDir).mkdir(parents=True, exist_ok=True)
-                    
-                    self._export(child, directory, newBone, newX, newY, newSlot, skinName)
-                    continue
+                if newSkinName is not None:
+                    skinName = newSkinName
+                    childDir = childDir + "/" + skinName
+                    pathlib.Path(childDir).mkdir(parents=True, exist_ok=True)
+                
+                self._export(child, directory, newBone, newX, newY, newSlot, skinName)
+                continue
 
             name = self.mergePattern.sub('', child.name()).strip()
             fileName = name if skinName == "default" else "{0}/{1}".format(skinName, name)
