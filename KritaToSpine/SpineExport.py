@@ -170,8 +170,8 @@ class SpineExport(object):
             slotDict = skinDict[slotName]
             
             slotDict[name] = {
-                'x': rect.left() + rect.width() / 2 - xOffset,
-                'y': (- rect.bottom() + rect.height() / 2) - yOffset,
+                'x': round(rect.left() + rect.width() / 2 - xOffset, 2),
+                'y': round((- rect.bottom() + rect.height() / 2) - yOffset, 2),
                 'width': rect.width(),
                 'height': rect.height(),
             }
