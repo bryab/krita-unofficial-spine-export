@@ -71,7 +71,10 @@ class SpineExport(object):
     def _alert(self, message):
         self.msgBox = self.msgBox if self.msgBox else QMessageBox()
         self.msgBox.setText(message)
-        self.msgBox.exec_()
+        self.msgBox.exec_
+        
+    def _getSlot(self, name):
+        return next((x for x in self.spineSlots if x['name'] == name), None)
 
     def _export(self, node, directory, bone="root", xOffset=0, yOffset=0, slot=None, currentSkinName="default"):
         for child in node.childNodes():
@@ -118,12 +121,15 @@ class SpineExport(object):
                 # Found a slot
                 if self.slotPattern.search(child.name()):
                     newSlotName = self.slotPattern.sub('', child.name()).strip()
-                    newSlot = {
-                        'name': newSlotName,
-                        'bone': bone,
-                        'attachment': None,
-                    }
-                    self.spineSlots.append(newSlot)
+
+                    newSlot = self._getSlot(newSlotName)
+                    if (newSlot == None):
+                        newSlot = {
+                            'name': newSlotName,
+                            'bone': bone,
+                            'attachment': None,
+                        }
+                        self.spineSlots.append(newSlot)
 
                 # Found a skin
                 newSkinName = self.getTagValue(child.name(), "skin")
@@ -146,12 +152,14 @@ class SpineExport(object):
             newSlot = slot
 
             if not newSlot:
-                newSlot = {
-                    'name': name,
-                    'bone': bone,
-                    'attachment': name,
-                }
-                self.spineSlots.append(newSlot)
+                newSlot = self._getSlot(name)
+                if newSlot == None:
+                    newSlot = {
+                        'name': name,
+                        'bone': bone,
+                        'attachment': name,
+                    }
+                    self.spineSlots.append(newSlot)
             else:
                 if not newSlot['attachment']:
                     newSlot['attachment'] = name
