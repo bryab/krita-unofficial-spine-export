@@ -16,7 +16,7 @@ class SpineExport(object):
         self.bonePattern = re.compile("\(bone\)|\[bone\]", re.IGNORECASE)
         self.mergePattern = re.compile("\(merge\)|\[merge\]", re.IGNORECASE)
         self.slotPattern = re.compile("\(slot\)|\[slot\]", re.IGNORECASE)
-        self.skinPattern = re.compile("\(skin\)|\[skin\]", re.IGNORECASE)
+        self.skinPattern = re.compile("\(skin(:.+)?\)|\[skin(:.+)?\]", re.IGNORECASE)
 
     def exportDocument(self, document, directory, boneLength, includeHidden):
         if document is not None:
@@ -141,8 +141,13 @@ class SpineExport(object):
                 
                 self._export(child, directory, newBone, newX, newY, newSlot, skinName)
                 continue
+                
+            newSkinName = self.getTagValue(child.name(), "skin")
+            if newSkinName is not None:
+                skinName = newSkinName
 
             name = self.mergePattern.sub('', child.name()).strip()
+            name = self.skinPattern.sub('', name).strip()
             fileName = name if skinName == "default" else "{0}/{1}".format(skinName, name)
             outPath = '{0}/{1}.{2}'.format(directory, fileName, self.fileFormat)
             print("outpath: " + outPath)
