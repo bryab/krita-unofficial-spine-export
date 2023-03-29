@@ -35,15 +35,15 @@ class SpineExport(object):
 
             horGuides = document.horizontalGuides()
             verGuides = document.verticalGuides()
-           
-            #self._alert("Guides: ({0}, {1})".format(horGuides, verGuides))
-           
+
             xOrigin = 0
             yOrigin = 0
                         
             if len(horGuides) == 1 and len(verGuides) == 1:
                 xOrigin = verGuides[0]
                 yOrigin = -horGuides[0] + 1
+            else:
+                self._alert(f"Not exactly 1 each of {horGuides} horizontal and {verGuides} vertical guides; not using origin")
 
             krita.Krita.instance().setBatchmode(True)
             self.document = document
@@ -69,9 +69,10 @@ class SpineExport(object):
             return None
 
     def _alert(self, message):
+        print(f"Showing alert: {message}")
         self.msgBox = self.msgBox if self.msgBox else QMessageBox()
         self.msgBox.setText(message)
-        self.msgBox.exec_
+        self.msgBox.exec()
         
     def _getSlot(self, name):
         return next((x for x in self.spineSlots if x['name'] == name), None)

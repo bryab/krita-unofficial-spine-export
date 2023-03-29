@@ -127,7 +127,7 @@ class UIDocumentTools(object):
         for document in self.documentsList:
             self.widgetDocuments.addItem(document.fileName())
            
-        if self.documentsList[0]:
+        if self.documentsList:
             self.widgetDocuments.setCurrentItem(self.widgetDocuments.item(0))
             self._documentSelected()
 
