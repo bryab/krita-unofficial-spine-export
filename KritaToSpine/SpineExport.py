@@ -146,6 +146,8 @@ class SpineExport(object):
             newSkinName = self.getTagValue(child.name(), "skin")
             if newSkinName is not None:
                 skinName = newSkinName
+                childDir = directory + "/" + skinName
+                pathlib.Path(childDir).mkdir(parents=True, exist_ok=True)
 
             name = self.mergePattern.sub('', child.name()).strip()
             name = self.skinPattern.sub('', name).strip()
