@@ -12,6 +12,7 @@
 
 # https://creativecommons.org/publicdomain/zero/1.0/legalcode
 
+import math
 from PyQt5.QtWidgets import (QWidget, QSpinBox,
                              QVBoxLayout, QFormLayout, QComboBox)
 
@@ -62,7 +63,7 @@ class ScaleTool(QWidget):
                             self.strategyComboBox.currentText())
 
     def updateFields(self, document):
-        self.xResSpinBox.setValue(document.xRes())
-        self.yResSpinBox.setValue(document.yRes())
-        self.widthSpinBox.setValue(document.width())
-        self.heightSpinBox.setValue(document.height())
+        self.xResSpinBox.setValue(math.ceil(document.xRes()))
+        self.yResSpinBox.setValue(math.ceil(document.yRes()))
+        self.widthSpinBox.setValue(math.ceil(document.width()))
+        self.heightSpinBox.setValue(math.ceil(document.height()))
