@@ -97,6 +97,9 @@ class SpineExport(object):
             
             childDir = directory
 
+            if "grouplayer" in child.type():
+                child.setPassThroughMode(False)
+
             if child.childNodes() and not self.mergePattern.search(child.name()):
                 newBone = bone
                 newSlot = slot
