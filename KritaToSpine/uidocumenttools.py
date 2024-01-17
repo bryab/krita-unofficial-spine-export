@@ -162,7 +162,8 @@ class UIDocumentTools(object):
                 "outDir": self.directoryTextField.text(),
                 "includeHidden": self.includeHiddenCheckbox.isChecked()
             }
-            
+            widget.saveSettings(jsonVal)
+
             setPath = self._getSettingsPath(doc.fileName())
             
             with open(setPath, "w") as outFile:
@@ -192,7 +193,7 @@ class UIDocumentTools(object):
         
         setPath = self._getSettingsPath(fileName)
         
-        if (os.path.exists(setPath)):
+        if os.path.exists(setPath):
             with open(setPath, "r") as inFile:
                 docData = json.load(inFile)
                 self.directoryTextField.setText(docData["outDir"])
@@ -202,7 +203,7 @@ class UIDocumentTools(object):
         # TODO have this loop through the tabs and set them up
         widget = self.tabTools.currentWidget()
         # Tell the widget to update itself to the current settings
-        widget.updateFields(doc[0])
+        widget.updateFields(doc[0], docData)
         self.outputField.clear()
 
     def _selectedDocuments(self):

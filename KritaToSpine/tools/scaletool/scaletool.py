@@ -62,8 +62,12 @@ class ScaleTool(QWidget):
                             self.yResSpinBox.value(),
                             self.strategyComboBox.currentText())
 
-    def updateFields(self, document):
+    def updateFields(self, document, settings):
         self.xResSpinBox.setValue(math.ceil(document.xRes()))
         self.yResSpinBox.setValue(math.ceil(document.yRes()))
-        self.widthSpinBox.setValue(math.ceil(document.width()))
-        self.heightSpinBox.setValue(math.ceil(document.height()))
+        self.widthSpinBox.setValue(settings.get('scale_width', math.ceil(document.width())))
+        self.heightSpinBox.setValue(settings.get('scale_height', math.ceil(document.height())))
+
+    def saveSettings(self, settings):
+        settings['scale_width'] = self.widthSpinBox.value()
+        settings['scale_height'] = self.heightSpinBox.value()
