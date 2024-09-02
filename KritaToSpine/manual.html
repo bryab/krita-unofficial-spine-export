@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+  </head>
+  <body>
+
+<p>Experimental Krita 4 Python Plugin to export into the Spine JSON format</p>
+
+<h2>How to install</h2>
+<p>Copy <code>KritaToSpine.desktop</code> and the <code>KritaToSpine</code> folder into the <code>pykrita</code> directory inside the Krita Resource directory. You can find your Resource Directory within Krita via <code>Settings &gt; Manage Resources &gt; Open Resource Folder</code></p>
+<p>Restart Krita and make sure the plugin is enabled, which means <code>Settings &gt; Configure Krita &gt; Python Plugin manager &gt; Unofficial Spine Export Plugin</code> should be checked.</p>
+<h2>How to use</h2>
+<p>This plugin is inspired by the official <a href="https://github.com/EsotericSoftware/spine-scripts/tree/master/photoshop">Photoshop plugin</a> and a fork of the <a href="https://github.com/chartinger/krita-unofficial-spine-export">Unofficial Spine Export</a> plugin</p>
+<p>It works nearly the same but not all the features of the Photoshop version are implemented. You can find the script under <code>Tools &gt; Scripts &gt; Export to Spine</code>. Select a folder and all your images will be exported into it as well as <code>spine.json</code></p>
+
+<p>Supported in Group Layers:</p>
+
+<ul>
+<li>(Bone) Slot and bone layers in the group are placed under a bone, named after the group. The bone is created at the center of a visible attachment.</li>
+<li>(Slot)  Layers in the group are placed in a slot, named after the group.</li>
+<li>(Merge) Layers in the group are merged and a single image is output, named after the group.</li>
+<li>(Ignore) Layers in the group and any child groups will not be output.</li>
+</ul>
+
+<p>Notes:</p>
+<ul>
+<li>Skins and subfolders are <strong>not</strong> supported</li>
+<li>No configuration options</li>
+<li>Images will be in <code>png</code> format</li>
+<li>Both () and [] can be used</li>
+<li>Invisible layers are ignored</li>
+<li>Be careful with filter layers. They will export as merged layer like they are shown in Krita. Consider organizing your scene with merge folders for better control.</li>
+</ul>
+
+</body>
